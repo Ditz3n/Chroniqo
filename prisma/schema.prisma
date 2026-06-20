@@ -1,0 +1,734 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  // url      = env("DATABASE_URL")
+  // url is inside config rather than schema in Prisma v. 7.*
+}
+
+enum GlobalRole {
+  USER
+  ADMIN
+}
+
+enum CommunityRole {
+  USER
+  MODERATOR
+  ADMIN
+  OWNER
+}
+
+model User {
+  isDummy                    Boolean   @default(false)
+  id                         String    @id @default(cuid())
+  name                       String?
+  username                   String?   @unique
+  email                      String    @unique
+  emailVerified              DateTime?
+  image                      String?
+  hashedPassword             String?
+  firstName                  String?
+  lastName                   String?
+  gender                     String?
+  age                        Int?
+  weight                     Float?
+  weightUnit                 String?   // e.g., 'kg' or 'lbs'
+  height                     Float?
+  heightUnit                 String?   // e.g., 'cm' or 'ft'
+  medications                String[]
+  bio                        String?
+  conditions                 String[]  // Storing condition tags as an array of strings
+  quickReactions             String[]  @default(["❤️", "😂", "😮", "😢", "😡", "👍"])
+  onboarded                  Boolean   @default(false)
+  onboardingStep             Int? @default(1)
+  role                       GlobalRole @default(USER)
+  isPrivate                  Boolean   @default(false)
+  messagingPermission        String    @default("ALL") // "ALL", "ONLY_FRIENDS", "NONE"
+  headerImage                String?
+  avatarEmoji                String?
+  avatarBgColor              String?
+  headerEmoji                String?
+  headerBgColor              String?
+  socialLinks                Json?     // Array of { platform: string, url: string, username: string }
+  createdAt                  DateTime  @default(now())
+  updatedAt                  DateTime  @updatedAt
+  locale                     String    @default("da") // Tracks user language for emails (default to Danish as per proxy.ts)
+
+  // Signup verification (manual/credentials users only; set to now() on first OAuth login)
+  signupVerified             DateTime?
+  signupVerificationToken    SignupVerificationToken?
+
+  // Tokens
+  passwordResetTokens        PasswordResetToken[]
+  accountDeletionTokens      AccountDeletionToken[]
+  emailVerificationTokens    EmailVerificationToken[] 
+  usernameChangeTokens       UsernameChangeToken[]   
+
+  // Health data visibility flags - controls what other users can see on the profile
+  showConditions              Boolean   @default(true)
+  showMedications             Boolean   @default(false)
+  showAge                     Boolean   @default(true)
+  showHeight                  Boolean   @default(false)
+  showWeight                  Boolean   @default(false)
+  
+  // Birth date for optional auto-updating age calculation (stored age is the fallback)
+  birthDate                   DateTime?
+  autoUpdateAge               Boolean   @default(false)
+  
+  // Tracks the last username change for 30-day cooldown enforcement
+  usernameChangedAt           DateTime?
+
+  // Auth.js relations
+  accounts                    Account[]
+  sessions                    Session[]
+
+  // Domain relations
+  dailyStatuses               DailyStatus[]
+  posts                       Post[]
+  comments                    Comment[]
+  communities                 CommunityMember[]
+  conversations               ConversationParticipant[]
+  messages                    Message[]
+  reactions                   MessageReaction[]
+
+  // Friends relations
+  friendships                 Friendship[]    @relation("UserFriendships")
+  friendOf                    Friendship[]    @relation("UserFriends")
+  sentFriendRequests          FriendRequest[] @relation("SentFriendRequests")
+  receivedFriendRequests      FriendRequest[] @relation("ReceivedFriendRequests")
+
+  // Community relations
+  hiddenCommunities           HiddenCommunity[]
+  blockedCommunities          BlockedCommunity[]
+  postDrafts                  PostDraft[]
+  anonymousIdentities         CommunityAnonymousIdentity[]
+
+  // Post relations
+  pinnedPostId                String?
+  savedPosts                  SavedPost[]
+  hiddenPosts                 HiddenPost[]
+  postSupports                PostSupport[]
+  recentPosts                 RecentPost[]
+
+  // Comment relations
+  commentSupports             CommentSupport[]
+  hiddenComments              HiddenComment[]
+
+  // Moderation relations
+  blocks                      GlobalBlock[]   @relation("UserBlocks")
+  blockedBy                   GlobalBlock[]   @relation("UserBlockedBy")
+  globalBan                   GlobalBan?
+  globalMute                  GlobalMute?
+  communityBans               CommunityBan[]
+  communityMutes              CommunityMute[]
+  reportsSent                 Report[]        @relation("UserReportsSent")
+  reportsReceived             Report[]        @relation("UserReportsReceived")
+  notifications               Notification[]
+  warningsIssued              AdminWarning[]  @relation("WarningsIssued")  
+  warningsReceived            AdminWarning[]  @relation("UserWarnings") 
+
+  // Niqo AI chat
+  niqoChat                    NiqoChat?
+
+  // Minigame relations
+  gamesAsPlayer1              Minigame[] @relation("MinigamePlayer1")
+  gamesAsPlayer2              Minigame[] @relation("MinigamePlayer2")
+  gamesWon                    Minigame[] @relation("MinigameWinner")
+}
+
+model SignupVerificationToken {
+  id           String   @id @default(cuid())
+  userId       String   @unique  // One active token per user at a time
+  email        String
+  token        String   @unique
+  expires      DateTime
+  createdAt    DateTime @default(now())
+
+  user         User @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model Friendship {
+  id           String   @id @default(cuid())
+  userId       String
+  friendId     String
+  createdAt    DateTime @default(now())
+
+  user         User @relation("UserFriendships", fields: [userId], references: [id], onDelete: Cascade)
+  friend       User @relation("UserFriends", fields: [friendId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, friendId])
+}
+
+model FriendRequest {
+  id            String   @id @default(cuid())
+  senderId      String
+  receiverId    String
+  status        String   @default("PENDING") // PENDING, ACCEPTED, DECLINED
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  sender        User @relation("SentFriendRequests", fields: [senderId], references: [id], onDelete: Cascade)
+  receiver      User @relation("ReceivedFriendRequests", fields: [receiverId], references: [id], onDelete: Cascade)
+
+  @@unique([senderId, receiverId])
+}
+
+model Account {
+  id                   String  @id @default(cuid())
+  userId               String
+  type                 String
+  provider             String
+  providerAccountId    String
+  refresh_token        String? @db.Text
+  access_token         String? @db.Text
+  expires_at           Int?
+  token_type           String?
+  scope                String?
+  id_token             String? @db.Text
+  session_state        String?
+
+  user                 User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+}
+
+model GlobalBlock {
+  blockerId    String
+  blockedId    String
+  createdAt    DateTime @default(now())
+
+  blocker      User @relation("UserBlocks", fields: [blockerId], references: [id], onDelete: Cascade)
+  blocked      User @relation("UserBlockedBy", fields: [blockedId], references: [id], onDelete: Cascade)
+
+  @@id([blockerId, blockedId])
+}
+
+model GlobalBan {
+  isDummy        Boolean   @default(false)
+  isActive       Boolean   @default(true)
+  id             String    @id @default(cuid())
+  email          String    @unique
+  userId         String?   @unique
+  reason         String?
+  expiresAt      DateTime?
+  deleteToken    String?   @unique
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+
+  // If the user deletes their account, the userId becomes null, but the email remains banned
+  user           User? @relation(fields: [userId], references: [id], onDelete: SetNull)
+}
+
+model GlobalMute {
+  id           String    @id @default(cuid())
+  userId       String    @unique
+  reason       String?
+  expiresAt    DateTime?
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+
+  user         User @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model Session {
+  id              String   @id @default(cuid())
+  sessionToken    String   @unique
+  userId          String
+  expires         DateTime
+
+  user            User @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model DailyStatus {
+  id           String   @id @default(cuid())
+  userId       String
+  value        Int      // 0-4 matching the 1-5 scale
+  note         String?
+  date         DateTime @db.Date // Stored as date to enforce 1 per day
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  user         User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  messages     Message[]
+
+  // Enforce max 1 registration per user per day
+  @@unique([userId, date])
+}
+
+model Community {
+  isDummy                Boolean   @default(false)
+  id                     String   @id @default(cuid())
+  name                   String   @unique
+  description            String?
+  rules                  String[]  @default([])
+  category               String   @default("chronic") // e.g., "chronic", "physical", "psychological"
+  image                  String?
+  headerImage            String?
+  avatarEmoji            String?
+  avatarBgColor          String?
+  headerEmoji            String?
+  headerBgColor          String?
+  isPrivate              Boolean  @default(false)
+  isActive               Boolean  @default(true) // Support hiding communities
+  banReason              String?  @db.Text       // Reason for system admin suspension
+  bannedUntil            DateTime?                 // Expiration of suspension
+  createdAt              DateTime @default(now())
+  updatedAt              DateTime @updatedAt
+  conversation           Conversation?
+  anonymousIdentities    CommunityAnonymousIdentity[]
+
+  members                CommunityMember[]
+  posts                  Post[]
+  
+  hiddenByUsers          HiddenCommunity[]
+  blockedByUsers         BlockedCommunity[]
+  drafts                 PostDraft[]
+
+  bans                   CommunityBan[]
+  mutes                  CommunityMute[]
+  reports                Report[]        @relation("CommunityReports")
+  warningsReceived       AdminWarning[]  @relation("CommunityWarnings")
+}
+
+model BlockedCommunity {
+  userId         String
+  communityId    String
+  createdAt      DateTime @default(now())
+
+  user           User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  community      Community @relation(fields: [communityId], references: [id], onDelete: Cascade)
+
+  @@id([userId, communityId])
+}
+
+model CommunityBan {
+  id             String    @id @default(cuid())
+  communityId    String
+  userId         String
+  reason         String?
+  expiresAt      DateTime?
+  createdAt      DateTime  @default(now())
+
+  community      Community @relation(fields: [communityId], references: [id], onDelete: Cascade)
+  user           User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([communityId, userId])
+}
+
+model CommunityMute {
+  id             String    @id @default(cuid())
+  communityId    String
+  userId         String
+  reason         String?
+  expiresAt      DateTime?
+  createdAt      DateTime  @default(now())
+
+  community      Community @relation(fields: [communityId], references: [id], onDelete: Cascade)
+  user           User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([communityId, userId])
+}
+
+model CommunityMember {
+  userId         String
+  communityId    String
+  role           CommunityRole @default(USER)
+  status         String        @default("ACCEPTED") // "ACCEPTED", "PENDING"
+  joinedAt       DateTime      @default(now())
+
+  user           User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  community      Community @relation(fields: [communityId], references: [id], onDelete: Cascade)
+
+  @@id([userId, communityId])
+}
+
+model CommunityAnonymousIdentity {
+  id             String   @id @default(cuid())
+  userId         String
+  communityId    String
+  displayName    String   // "Anonymous Fox 42"
+  username       String   // "anonymous_fox_42"
+  animalEmoji    String   // "🦊"
+  bgColor        String   // "#5C5480"
+  createdAt      DateTime @default(now())
+
+  user           User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  community      Community @relation(fields: [communityId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, communityId])
+}
+
+model HiddenCommunity {
+  userId         String
+  communityId    String
+  createdAt      DateTime @default(now())
+
+  user           User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  community      Community @relation(fields: [communityId], references: [id], onDelete: Cascade)
+
+  @@id([userId, communityId])
+}
+
+model Post {
+  isDummy        Boolean   @default(false)
+  id             String   @id @default(cuid())
+  authorId       String
+  communityId    String?  // null means it's posted to the user's profile
+  title          String
+  type           String   @default("text") // "text", "image", "video", "youtube", "link", "poll"
+  content        String?  @db.Text // Markdown text
+  metadata       Json?    // Stores image arrays, video URLs, poll options, etc.
+  isAnonymous    Boolean  @default(false)
+  viewCount      Int      @default(0)
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+  author         User       @relation(fields: [authorId], references: [id], onDelete: Cascade)
+  community      Community? @relation(fields: [communityId], references: [id], onDelete: Cascade)
+  comments       Comment[]
+  savedBy        SavedPost[]
+  hiddenBy       HiddenPost[]
+  reports        Report[]    @relation("PostReports")
+  supportedBy    PostSupport[]
+  recentBy       RecentPost[]
+}
+
+model RecentPost {
+  userId       String
+  postId       String
+  visitedAt    DateTime @default(now())
+
+  user         User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  post         Post @relation(fields: [postId], references: [id], onDelete: Cascade)
+
+  @@id([userId, postId])
+  @@index([userId, visitedAt(sort: Desc)])
+}
+
+model PostSupport {
+  userId       String
+  postId       String
+  createdAt    DateTime @default(now())
+
+  user         User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  post         Post @relation(fields: [postId], references: [id], onDelete: Cascade)
+
+  @@id([userId, postId])
+}
+
+model PostDraft {
+  id             String   @id @default(cuid())
+  authorId       String
+  communityId    String?
+  title          String?
+  type           String   @default("text")
+  content        String?  @db.Text
+  metadata       Json?
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  author         User       @relation(fields: [authorId], references: [id], onDelete: Cascade)
+  community      Community? @relation(fields: [communityId], references: [id], onDelete: Cascade)
+}
+
+model SavedPost {
+  userId       String
+  postId       String
+  createdAt    DateTime @default(now())
+
+  user         User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  post         Post @relation(fields: [postId], references: [id], onDelete: Cascade)
+
+  @@id([userId, postId])
+}
+
+model HiddenPost {
+  userId       String
+  postId       String
+  createdAt    DateTime @default(now())
+
+  user         User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  post         Post @relation(fields: [postId], references: [id], onDelete: Cascade)
+
+  @@id([userId, postId])
+}
+
+model Comment {
+  isDummy        Boolean   @default(false)
+  id             String   @id @default(cuid())
+  postId         String
+  authorId       String
+  parentId       String?
+  isAnonymous    Boolean  @default(false)
+  content        String   @db.Text
+  deletedAt      DateTime?
+  editedAt       DateTime?
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  post           Post  @relation(fields: [postId], references: [id], onDelete: Cascade)
+  author         User  @relation(fields: [authorId], references: [id], onDelete: Cascade)
+
+  // Self-referencing relation for 1 level of nesting
+  parent         Comment?  @relation("CommentReplies", fields: [parentId], references: [id], onDelete: Cascade)
+  replies        Comment[] @relation("CommentReplies")
+  reports        Report[]  @relation("CommentReports")
+  
+  supportedBy    CommentSupport[]
+  hiddenBy       HiddenComment[]
+}
+
+model CommentSupport {
+  userId       String
+  commentId    String
+  createdAt    DateTime @default(now())
+
+  user         User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  comment      Comment @relation(fields: [commentId], references: [id], onDelete: Cascade)
+
+  @@id([userId, commentId])
+}
+
+model HiddenComment {
+  userId       String
+  commentId    String
+  createdAt    DateTime @default(now())
+
+  user         User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  comment      Comment @relation(fields: [commentId], references: [id], onDelete: Cascade)
+
+  @@id([userId, commentId])
+}
+
+model Conversation {
+  isDummy                Boolean   @default(false)
+  id                     String   @id @default(cuid())
+  name                   String?  
+  image                  String? 
+  avatarEmoji            String?
+  avatarBgColor          String?
+  durationHours          Int      @default(24) // Default duration of the chat
+  expiresAt              DateTime              // Timestamp when the chat becomes inaccessible/deleted
+  deletedByUserId        String?  
+  deletionScheduledAt    DateTime? // Timestamp for when CRON job can delete it
+  createdAt              DateTime @default(now())
+  updatedAt              DateTime @updatedAt
+
+  // Community chat link - null for direct/group chats, set for community chats
+  isCommunity            Boolean    @default(false)
+  communityId            String?    @unique  // enforces one chat per community
+
+  // back-relation (add alongside the existing participants/messages relations)
+  community              Community? @relation(fields: [communityId], references: [id], onDelete: Cascade)
+
+  participants           ConversationParticipant[]
+  messages               Message[]
+
+  minigames              Minigame[]
+}
+
+model ConversationParticipant {
+  userId            String
+  conversationId    String
+  nickname          String?
+  status            String   @default("ACCEPTED") // "ACCEPTED", "PENDING"
+  isMuted           Boolean  @default(false)
+  lastReadAt        DateTime @default(now())
+  joinedAt          DateTime @default(now())
+
+  user              User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  conversation      Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+
+  @@id([userId, conversationId])
+}
+
+model Message {
+  isDummy           Boolean   @default(false)
+  id                String   @id @default(cuid())
+  conversationId    String
+  senderId          String
+  content           String   @db.Text
+  isSystem          Boolean  @default(false) // True for "User accepted the request"
+  messageType       String?  // e.g. "REQUEST_ACCEPTED" - null for normal messages
+  replyToId         String?  // Optional reference to another message ID
+  dailyStatusId     String?
+  createdAt         DateTime @default(now())
+  deletedAt         DateTime? 
+
+  // Allows sender to appear anonymous in community chats (mods/admins can still see real sender)
+  isAnonymous       Boolean   @default(false)
+
+  // Optional link to a minigame; system messages with a game action carry this
+  minigameId        String?
+  minigame          Minigame? @relation("MinigameMessages", fields: [minigameId], references: [id], onDelete: SetNull)
+
+  conversation      Conversation      @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  sender            User              @relation(fields: [senderId], references: [id], onDelete: Cascade)
+  dailyStatus       DailyStatus?      @relation(fields: [dailyStatusId], references: [id], onDelete: SetNull)
+  reactions         MessageReaction[]
+}
+
+model MessageReaction {
+  userId            String
+  messageId         String
+  emoji             String
+  createdAt         DateTime @default(now())
+
+  user              User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  message           Message @relation(fields: [messageId], references: [id], onDelete: Cascade)
+
+  // One user can only react once per message
+  @@id([userId, messageId])
+}
+
+model PasswordResetToken {
+  id          String   @id @default(cuid())
+  userId      String
+  email       String
+  token       String   @unique
+  expires     DateTime
+
+  user        User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([email, token])
+}
+
+model AccountDeletionToken {
+  id         String   @id @default(cuid())
+  userId     String
+  email      String
+  token      String   @unique
+  expires    DateTime
+
+  user       User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([email, token])
+}
+
+model EmailVerificationToken {
+  id         String   @id @default(cuid())
+  userId     String
+  email      String
+  token      String   @unique
+  expires    DateTime
+
+  user       User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([email, token])
+}
+
+model UsernameChangeToken {
+  id             String   @id @default(cuid())
+  userId         String
+  email          String
+  token          String   @unique
+  newUsername    String?
+  expires        DateTime
+
+  user           User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([email, token])
+}
+
+model Report {
+  isDummy              Boolean   @default(false)
+  id                   String   @id @default(cuid())
+  reporterId           String
+  reason               String   @db.Text
+  isSuppressed         Boolean @default(false) // Allows admins to ignore duplicate/spam reports in counts
+  createdAt            DateTime @default(now())
+  updatedAt            DateTime @updatedAt
+
+  // Target relations (only one should be populated per report)
+  targetUserId         String?
+  targetCommunityId    String?
+  targetPostId         String?
+  targetCommentId      String?
+
+  reporter             User       @relation("UserReportsSent", fields: [reporterId], references: [id], onDelete: Cascade)
+  targetUser           User?      @relation("UserReportsReceived", fields: [targetUserId], references: [id], onDelete: Cascade)
+  targetCommunity      Community? @relation("CommunityReports", fields: [targetCommunityId], references: [id], onDelete: Cascade)
+  targetPost           Post?      @relation("PostReports", fields: [targetPostId], references: [id], onDelete: Cascade)
+  targetComment        Comment?   @relation("CommentReports", fields: [targetCommentId], references: [id], onDelete: Cascade)
+
+  @@index([reporterId, targetUserId])
+  @@index([reporterId, targetCommunityId])
+  @@index([reporterId, targetPostId])
+  @@index([reporterId, targetCommentId])
+}
+
+model AdminWarning {
+  id                   String   @id @default(cuid())
+  adminId              String?
+  targetUserId         String?
+  targetCommunityId    String?
+  createdAt            DateTime @default(now())
+
+  admin                User?      @relation("WarningsIssued", fields: [adminId], references: [id], onDelete: SetNull)
+  targetUser           User?      @relation("UserWarnings", fields: [targetUserId], references: [id], onDelete: Cascade)
+  targetCommunity      Community? @relation("CommunityWarnings", fields: [targetCommunityId], references: [id], onDelete: Cascade)
+}
+
+model Notification {
+  id           String   @id @default(cuid())
+  userId       String
+  type         String   // "WARNING", "BANNED_ALERT", "SYSTEM", etc.
+  title        String?  
+  message      String   @db.Text
+  isRead       Boolean  @default(false)
+  createdAt    DateTime @default(now())
+
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model NiqoChat {
+  id           String   @id @default(cuid())
+  userId       String   @unique
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  user         User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  messages     NiqoMessage[]
+}
+
+model NiqoMessage {
+  id            String   @id @default(cuid())
+  niqoChatId    String
+  role          String   // "USER" | "MODEL"
+  content       String   @db.Text
+  createdAt     DateTime @default(now())
+
+  chat          NiqoChat @relation(fields: [niqoChatId], references: [id], onDelete: Cascade)
+}
+
+model Minigame {
+  // Type: "TIC_TAC_TOE" | "CONNECT_FOUR" | "KNUCKLEBONES"
+  // Mode: "ASYNC" (play whenever) | "LIVE" (both online, fast-polling)
+  // Status: "PENDING" | "ACTIVE" | "COMPLETED" | "CANCELLED" | "DECLINED"
+  id                String    @id @default(cuid())
+  type              String
+  mode              String    @default("ASYNC")
+  status            String    @default("PENDING")
+  player1Id         String    // challenge initiator; plays as X / slot 1
+  player2Id         String    // challenged player; plays as O / slot 2
+  currentTurnId     String    // userId whose move is next
+  winnerId          String?
+  isDraw            Boolean   @default(false)
+  state             Json      // board / grid state (game-specific structure)
+  conversationId    String?   // nullable - game record persists if chat is deleted
+  completedAt       DateTime?
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime  @updatedAt
+
+  player1           User          @relation("MinigamePlayer1", fields: [player1Id], references: [id], onDelete: Cascade)
+  player2           User          @relation("MinigamePlayer2", fields: [player2Id], references: [id], onDelete: Cascade)
+  winner            User?         @relation("MinigameWinner", fields: [winnerId], references: [id], onDelete: SetNull)
+  conversation      Conversation? @relation(fields: [conversationId], references: [id], onDelete: SetNull)
+  messages          Message[]     @relation("MinigameMessages")
+
+  @@index([player1Id, player2Id])
+  @@index([conversationId])
+  @@index([status])
+}

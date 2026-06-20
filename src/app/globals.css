@@ -1,0 +1,816 @@
+@import "tailwindcss";
+@import "tw-animate-css";
+
+/* Light Mode Tokens */
+:root {
+  --background: #f7f7f5;
+  --foreground: #121212;
+  --foreground-muted: #12121277;
+  --brand: #e65c69;
+  --brand-muted: #f0939c;
+  --warning: #f59e0b;
+
+  --color-dailystatus-exhausted: #a591f5;
+  --color-dailystatus-low-energy: #eb7d19;
+  --color-dailystatus-neutral: #915f46;
+  --color-dailystatus-good-periods: #ffcd5a;
+  --color-dailystatus-full-energy: #9baf64;
+
+  --feedback-success: #9baf64;
+  --feedback-error: #e65c69;
+
+  --foreground-60: #12121299;
+  --foreground-67: #121212aa;
+  --foreground-40: #12121266;
+
+  --surface: #eeede9;
+  --surface-border: #00000012;
+  --surface-opaque: #eeede9;
+  --surface-hover: #e3e2de;
+
+  --navbar-bg: #f7f7f5e6;
+  --navbar-border: #12121214;
+
+  --divider: #00000026;
+  --lang-border: #00000022;
+
+  --smiley-face: #f5ede0;
+  --smiley-feature: #2a1a1a;
+  --smiley-shadow: #00000018;
+
+  /* Pastel icon/avatar palette - theme-independent, stored as hex in DB */
+  --palette-rose: #f4b8c1;
+  --palette-coral: #f7c5a8;
+  --palette-peach: #fad9b0;
+  --palette-butter: #f9e8a0;
+  --palette-sage: #bfdc9e;
+  --palette-mint: #a8ddc8;
+  --palette-sky: #a8d4f5;
+  --palette-periwinkle: #b8b8f4;
+  --palette-lavender: #d1b8f4;
+  --palette-lilac: #f4b8e8;
+  --palette-smoke: #d4d0cc;
+  --palette-slate: #b0bcc8;
+  --palette-sand: #e8dcc8;
+  --palette-stone: #c8c0b4;
+  --palette-charcoal: #3a3a3a;
+  --palette-midnight: #1e2a3a;
+}
+
+/* Dark Mode Tokens */
+.dark {
+  --background: #121212;
+  --foreground: #f7f7f5;
+  --foreground-muted: #f7f7f577;
+  --brand-muted: #f0939c;
+  --warning: #fbbf24;
+
+  --foreground-60: #f7f7f599;
+  --foreground-67: #f7f7f5aa;
+  --foreground-40: #f7f7f566;
+
+  --surface: #ffffff0d;
+  --surface-border: #ffffff14;
+  --surface-opaque: #1e1e1e;
+  --surface-hover: #2a2a2a;
+
+  --navbar-bg: #121212e6;
+  --navbar-border: #ffffff0f;
+
+  --divider: #ffffff26;
+  --lang-border: #ffffff22;
+
+  --smiley-face: #f5ede0;
+  --smiley-feature: #2a1a1a;
+  --smiley-shadow: #00000018;
+}
+
+/* Expose all Tokens as Tailwind utilities */
+@theme inline {
+  --breakpoint-xs: 400px;
+
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-foreground-muted: var(--foreground-muted);
+  --color-brand: var(--brand);
+  --color-brand-muted: var(--brand-muted);
+  --color-warning: var(--warning);
+
+  --color-foreground-60: var(--foreground-60);
+  --color-foreground-67: var(--foreground-67);
+  --color-foreground-40: var(--foreground-40);
+
+  --color-surface: var(--surface);
+  --color-surface-border: var(--surface-border);
+  --color-surface-opaque: var(--surface-opaque);
+  --color-surface-hover: var(--surface-hover);
+
+  --color-navbar-bg: var(--navbar-bg);
+  --color-navbar-border: var(--navbar-border);
+
+  --color-divider: var(--divider);
+  --color-lang-border: var(--lang-border);
+
+  --color-feedback-success: var(--feedback-success);
+  --color-feedback-error: var(--feedback-error);
+
+  --color-dailystatus-exhausted: #a591f5;
+  --color-dailystatus-low-energy: #eb7d19;
+  --color-dailystatus-neutral: #915f46;
+  --color-dailystatus-good-periods: #ffcd5a;
+  --color-dailystatus-full-energy: #9baf64;
+
+  --color-smiley-feature: var(--smiley-feature);
+  --color-smiley-shadow: var(--smiley-shadow);
+
+  --color-palette-rose: var(--palette-rose);
+  --color-palette-coral: var(--palette-coral);
+  --color-palette-peach: var(--palette-peach);
+  --color-palette-butter: var(--palette-butter);
+  --color-palette-sage: var(--palette-sage);
+  --color-palette-mint: var(--palette-mint);
+  --color-palette-sky: var(--palette-sky);
+  --color-palette-periwinkle: var(--palette-periwinkle);
+  --color-palette-lavender: var(--palette-lavender);
+  --color-palette-lilac: var(--palette-lilac);
+  --color-palette-smoke: var(--palette-smoke);
+  --color-palette-slate: var(--palette-slate);
+  --color-palette-sand: var(--palette-sand);
+  --color-palette-stone: var(--palette-stone);
+  --color-palette-charcoal: var(--palette-charcoal);
+  --color-palette-midnight: var(--palette-midnight);
+
+  --font-sans: var(--font-inter);
+  --font-heading: var(--font-poppins);
+
+  --animate-spin-slow: spin-slow 18s linear infinite;
+  --animate-smiley-entrance: smiley-entrance 0.8s cubic-bezier(0.16, 1, 0.3, 1)
+    both;
+  --animate-dropdown-in: dropdown-in 0.15s cubic-bezier(0.16, 1, 0.3, 1) both;
+  --animate-dropdown-out: dropdown-out 0.1s ease-in both;
+
+  --animate-dialog-overlay-in: dialog-overlay-in 200ms ease forwards;
+  --animate-dialog-overlay-out: dialog-overlay-out 200ms ease-in forwards;
+  --animate-dialog-in: dialog-in 200ms cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  --animate-dialog-out: dialog-out 200ms ease-in forwards;
+
+  --animate-reaction-menu-in: reaction-menu-in 0.2s
+    cubic-bezier(0.16, 1, 0.3, 1) both;
+  --animate-reaction-menu-out: reaction-menu-out 0.15s ease-in both;
+
+  --animate-emoji-picker-in: emoji-picker-in 0.2s cubic-bezier(0.16, 1, 0.3, 1)
+    both;
+  --animate-emoji-picker-out: emoji-picker-out 0.15s ease-in both;
+
+  --animate-gradient-drip: gradient-drip 600ms cubic-bezier(0.16, 1, 0.3, 1)
+    both;
+
+  --animate-chat-fade-out: chat-fade-out 220ms ease forwards;
+  --animate-chat-enter: chat-enter 200ms ease both;
+  --animate-post-enter: post-enter 480ms cubic-bezier(0.16, 1, 0.3, 1) both;
+
+  @keyframes dialog-overlay-in {
+    from {
+      opacity: 0;
+    }
+    to {
+      opacity: 1;
+    }
+  }
+  @keyframes dialog-overlay-out {
+    from {
+      opacity: 1;
+    }
+    to {
+      opacity: 0;
+    }
+  }
+  @keyframes dialog-in {
+    from {
+      opacity: 0;
+      transform: scale(0.95);
+    }
+    to {
+      opacity: 1;
+      transform: scale(1);
+    }
+  }
+  @keyframes dialog-out {
+    from {
+      opacity: 1;
+      transform: scale(1);
+    }
+    to {
+      opacity: 0;
+      transform: scale(0.95);
+    }
+  }
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  background: var(--background);
+  color: var(--foreground);
+  font-family: var(--font-sans), sans-serif;
+}
+
+/* Global animations */
+/* Slow spin for circles around the smiley */
+@keyframes spin-slow {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* Smiley Entrance: fade in and scale up */
+@keyframes smiley-entrance {
+  0% {
+    opacity: 0;
+    transform: scale(0.4);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+/* Dropdown Menu Animations */
+@keyframes dropdown-in {
+  0% {
+    opacity: 0;
+    transform: scale(0.95) translateY(-4px);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
+
+@keyframes dropdown-out {
+  0% {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+  100% {
+    opacity: 0;
+    transform: scale(0.95) translateY(-4px);
+  }
+}
+
+/* Reaction Menu Animations */
+@keyframes reaction-menu-in {
+  0% {
+    opacity: 0;
+    transform: scale(0.8) translateY(6px);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
+
+@keyframes reaction-menu-out {
+  0% {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+  100% {
+    opacity: 0;
+    transform: scale(0.8) translateY(6px);
+  }
+}
+
+/* Emoji Picker Animations */
+@keyframes emoji-picker-in {
+  0% {
+    opacity: 0;
+    transform: scale(0.92) translateY(8px);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
+
+@keyframes emoji-picker-out {
+  0% {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+  100% {
+    opacity: 0;
+    transform: scale(0.92) translateY(8px);
+  }
+}
+
+/* Gradient Drip: a vertical reveal with a slight bounce for Niqo page transitions */
+@keyframes gradient-drip {
+  from {
+    opacity: 0;
+    transform: scaleY(0);
+    transform-origin: top;
+  }
+  to {
+    opacity: 1;
+    transform: scaleY(1);
+    transform-origin: top;
+  }
+}
+
+/* FloatingChat panel animations */
+@keyframes chat-fade-out {
+  from {
+    opacity: 1;
+  }
+  to {
+    opacity: 0;
+  }
+}
+
+/* Entering panel stays invisible for 60 ms (MiniChatView scrolls to bottom
+ * off-screen), then fades in - revealing the correct position */
+@keyframes chat-enter {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+/* Brand Sweep: a quick left-to-right effect for loading states or highlights */
+@keyframes brand-sweep {
+  0% {
+    transform: translateX(-150%);
+  }
+  100% {
+    transform: translateX(500%);
+  }
+}
+
+/* Feed empty-state reveal after last post removal */
+@keyframes feed-empty-unfold {
+  0% {
+    opacity: 0;
+    transform: translateY(-8px) scaleY(0.9);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0) scaleY(1);
+  }
+}
+
+.animate-feed-empty-unfold {
+  animation: feed-empty-unfold 560ms cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@keyframes post-enter {
+  0% {
+    opacity: 0;
+    transform: translateY(10px) scale(0.98);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+/* Custom scrollbars  */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: var(--foreground-40);
+  border-radius: 999px;
+  border: 2px solid transparent;
+  background-clip: padding-box;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: var(--foreground-60);
+  background-clip: padding-box;
+}
+/* Firefox */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: var(--foreground-40) transparent;
+}
+
+/* Override autofill styles to match the theme and prevent default browser styles */
+input:-webkit-autofill,
+input:-webkit-autofill:hover,
+input:-webkit-autofill:focus,
+input:-webkit-autofill:active {
+  -webkit-box-shadow: 0 0 0px 1000px var(--background) inset;
+  box-shadow: 0 0 0px 1000px var(--surface) inset !important;
+  -webkit-text-fill-color: var(--foreground);
+  border: none !important;
+  border-radius: inherit !important;
+  outline: none !important;
+  transition: background-color 99999s ease-in-out 0s !important;
+}
+
+.dark input:-webkit-autofill,
+.dark input:-webkit-autofill:hover,
+.dark input:-webkit-autofill:focus,
+.dark input:-webkit-autofill:active {
+  -webkit-box-shadow: 0 0 0px 1000px #1e1e1e inset !important;
+  box-shadow: 0 0 0px 1000px #1e1e1e inset !important;
+  -webkit-text-fill-color: var(--foreground);
+  border: none !important;
+  border-radius: inherit !important;
+  outline: none !important;
+  transition: background-color 99999s ease-in-out 0s !important;
+}
+
+/* Notched outline with wraparound label */
+.notched-outline {
+  position: absolute;
+  inset: 0;
+  top: 0px;
+  border: 2px solid var(--surface-border);
+  border-radius: 0.75rem;
+  pointer-events: none;
+  transition: border-color 200ms;
+}
+
+.notched-outline legend {
+  visibility: hidden;
+  margin-left: 0.75rem;
+  padding: 0;
+  font-size: 0.75rem;
+  line-height: 0;
+  white-space: nowrap;
+  max-width: 0.01px;
+  overflow: hidden;
+  transition:
+    max-width 200ms,
+    padding 200ms;
+}
+
+.notched-input:focus ~ .notched-outline {
+  border-color: var(--brand);
+}
+
+.notched-input:focus ~ .notched-outline legend,
+.notched-input:not(:placeholder-shown) ~ .notched-outline legend {
+  max-width: 100%;
+  padding: 0 9px;
+}
+
+.floating-label {
+  position: absolute;
+  left: 0.75rem;
+  top: 50%;
+  transform: translateY(-50%);
+  font-size: 0.875rem;
+  color: var(--foreground-60);
+  pointer-events: none;
+  z-index: 2;
+  padding: 2px 8px;
+  transition: all 200ms;
+  border: 2px solid transparent;
+  border-bottom: none;
+  border-radius: 0.5rem 0.5rem 0 0;
+}
+
+.notched-input:focus ~ .floating-label,
+.notched-input:not(:placeholder-shown) ~ .floating-label {
+  top: 0;
+  transform: translateY(calc(-100% - 0px));
+  font-size: 0.75rem;
+  background: var(--background);
+  border-color: var(--surface-border);
+}
+
+.notched-input:focus ~ .floating-label {
+  color: var(--brand);
+  border-color: var(--brand);
+}
+
+@layer utilities {
+  /* Navbar */
+  .nav-root {
+    top: 0;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 100%;
+  }
+  .nav-root[data-scrolled="true"] {
+    top: 16px;
+    width: min(95%, 1050px);
+  }
+
+  /* Smooth stroke transition for the logo EKG wave when brand color changes */
+  .logo-wave {
+    transition: stroke 500ms ease;
+  }
+
+  /* Mobile menu - grid-template-rows trick animates to unknown height */
+  .mobile-menu {
+    display: grid;
+    grid-template-rows: 0fr;
+    opacity: 0;
+    margin-top: 0;
+    border-radius: 0 0 24px 24px;
+    border-color: transparent;
+    transition:
+      grid-template-rows 300ms ease,
+      opacity 300ms ease,
+      margin-top 500ms ease,
+      border-radius 500ms ease;
+  }
+  .mobile-menu > div {
+    overflow: hidden;
+  }
+  .mobile-menu[data-open="true"] {
+    grid-template-rows: 1fr;
+    opacity: 1;
+    border-color: var(--navbar-border);
+  }
+  .mobile-menu[data-scrolled="true"] {
+    border-radius: 24px;
+    margin-top: 8px;
+  }
+  .mobile-menu[data-scrolled="true"][data-open="false"] {
+    border-color: transparent;
+  }
+
+  /* Custom Hamburger Menu styles */
+  .ham-menu {
+    cursor: pointer;
+    transition: transform 200ms ease-in-out;
+    min-width: 40px;
+    min-height: 40px;
+  }
+  .ham-menu:active {
+    transform: scale(0.95);
+  }
+  .ham-menu .line {
+    fill: none;
+    transition:
+      stroke-dasharray 400ms,
+      stroke-dashoffset 400ms,
+      transform 400ms;
+    stroke: currentColor;
+    stroke-width: 5.5;
+    stroke-linecap: round;
+  }
+  .ham-menu .top {
+    stroke-dasharray: 40 160;
+  }
+  .ham-menu .middle {
+    stroke-dasharray: 40 142;
+    transform-origin: 50%;
+  }
+  .ham-menu .bottom {
+    stroke-dasharray: 40 85;
+    transform-origin: 50%;
+  }
+  .ham-menu.active .top {
+    stroke-dashoffset: -64px;
+  }
+  .ham-menu.active .middle {
+    transform: rotate(90deg);
+  }
+  .ham-menu.active .bottom {
+    stroke-dashoffset: -64px;
+  }
+
+  /* Hero entrance animation */
+  .hero-fade {
+    opacity: 0;
+    transform: translateY(36px);
+    transition:
+      opacity 1s cubic-bezier(0.16, 1, 0.3, 1),
+      transform 1s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+  .hero-fade.visible {
+    opacity: 1;
+    transform: translateY(0);
+  }
+
+  /* HeroSmiley */
+  .hero-smiley-box {
+    width: 520px;
+    height: 520px;
+  }
+  .hero-smiley-label {
+    transition-property: opacity, background-color;
+  }
+
+  /* DailyStatusSlider */
+  .slider-thumb {
+    box-shadow: 0 2px 12px #00000040;
+  }
+  .slider-dot {
+    width: 12px;
+    height: 12px;
+    background: #ffffff8c;
+    z-index: 1;
+  }
+  .slider-dot.active {
+    width: 18px;
+    height: 18px;
+    background: white;
+    box-shadow: 0 0 0 3px #ffffff4d;
+    z-index: 2;
+  }
+
+  /* input field label background to prevent text bleed */
+  .label-bg {
+    background-color: var(--surface);
+  }
+  .dark .label-bg {
+    background-color: #1e1e1e;
+  }
+
+  /* -- FloatingChat panel state system --------------------------------------
+   *
+   * Each content panel (list, chat, new) has a data-state attribute that
+   * drives all visual transitions without ever remounting the React component.
+   * This preserves MiniChatView's scroll position when exiting a chat.
+   *
+   *   "active": fully visible, sits behind any exiting panel
+   *   "entering": fades in after 60 ms (MiniChatView scrolls to bottom first)
+   *   "exiting": fades out on top, pointer-events disabled
+   *   "hidden": invisible, pulled behind everything, pointer-events disabled
+   */
+  .chat-panel[data-state="active"] {
+    z-index: 0;
+    opacity: 1;
+    pointer-events: auto;
+  }
+
+  .chat-panel[data-state="entering"] {
+    z-index: 0;
+    opacity: 0;
+    pointer-events: none;
+    animation: var(--animate-chat-enter);
+  }
+
+  .chat-panel[data-state="exiting"] {
+    z-index: 10;
+    pointer-events: none;
+    animation: var(--animate-chat-fade-out);
+  }
+
+  .chat-panel[data-state="hidden"] {
+    z-index: -1;
+    opacity: 0;
+    pointer-events: none;
+  }
+
+  /* -- Reply Preview expand / collapse --------------------------------------
+   *
+   * Uses the grid-template-rows trick to animate to an unknown height.
+   * The inner div must have overflow:hidden so content is clipped while
+   * the row height is still animating toward 0 or 1fr.
+   *
+   * data-open="false": row collapses to 0, content invisible
+   * data-open="true": row expands to fit content, bottom padding slides in
+   */
+  .reply-preview {
+    display: grid;
+    grid-template-rows: 0fr;
+    opacity: 0;
+    transition:
+      grid-template-rows 280ms cubic-bezier(0.16, 1, 0.3, 1),
+      opacity 200ms ease;
+  }
+  .reply-preview > div {
+    overflow: hidden;
+    padding-bottom: 0;
+    transition: padding-bottom 280ms cubic-bezier(0.16, 1, 0.3, 1);
+  }
+  .reply-preview[data-open="true"] {
+    grid-template-rows: 1fr;
+    opacity: 1;
+  }
+  .reply-preview[data-open="true"] > div {
+    padding-bottom: 8px;
+  }
+
+  /* -- FloatingChat pill ↔ window morph --------------------------------------
+   *
+   * Opening (data-open="true"):
+   *   border-radius snaps in 80 ms: width + height spring open.
+   *
+   * Closing (data-open="false"):
+   *   width + height collapse: border-radius snaps back at 400 ms delay
+   *   (once the box is nearly small, so it never looks like a tall oval).
+   */
+  .chat-morph {
+    transition:
+      width 480ms cubic-bezier(0.16, 1, 0.3, 1),
+      height 480ms cubic-bezier(0.16, 1, 0.3, 1),
+      box-shadow 300ms ease,
+      border-radius 80ms ease 400ms;
+    will-change: width, height;
+  }
+
+  .chat-morph[data-open="true"] {
+    transition:
+      width 480ms cubic-bezier(0.16, 1, 0.3, 1),
+      height 480ms cubic-bezier(0.16, 1, 0.3, 1),
+      box-shadow 300ms ease,
+      border-radius 80ms ease 0ms;
+  }
+
+  .animate-post-enter {
+    animation: var(--animate-post-enter);
+  }
+
+  /* Dummy data generator steps
+     Expands/Collapses smoothly when generation starts/completes */
+  .dummy-steps {
+    overflow: hidden;
+    max-height: 600px;
+    opacity: 1;
+    margin-bottom: 1rem;
+    transition:
+      max-height 600ms cubic-bezier(0.16, 1, 0.3, 1),
+      opacity 600ms ease,
+      margin-bottom 600ms cubic-bezier(0.16, 1, 0.3, 1);
+  }
+  .dummy-steps[data-collapsed="true"] {
+    max-height: 0;
+    opacity: 0;
+    margin-bottom: 0;
+  }
+
+  .animate-gradient-drip {
+    animation: var(--animate-gradient-drip);
+  }
+
+  /* --- Editor List Styling --- */
+  /* Nested Bullet Lists */
+  .nested-ul {
+    list-style-type: disc;
+  }
+  .nested-ul ul {
+    list-style-type: circle;
+  }
+  .nested-ul ul ul {
+    list-style-type: square;
+  }
+
+  /* Nested Numbered Lists (1.1.1 format via CSS Counters) */
+  .nested-ol {
+    counter-reset: editor-item;
+    list-style-type: none !important;
+  }
+  .nested-ol li {
+    position: relative;
+    list-style-type: none !important;
+  }
+  /* CRITICAL: Kills the native browser/Tailwind Typography numbers */
+  .nested-ol li::marker {
+    content: none !important;
+    display: none !important;
+  }
+  .nested-ol li::before {
+    content: counters(editor-item, ".") ". ";
+    counter-increment: editor-item;
+    position: absolute;
+    right: 100%;
+    margin-right: 0.5rem;
+    white-space: nowrap;
+    color: var(--foreground-60);
+    font-weight: 500;
+    pointer-events: none;
+  }
+
+  /* Prevent phantom wrappers from inflating CSS counters or showing dots */
+  li.phantom-wrapper {
+    list-style: none !important;
+    counter-increment: none !important;
+  }
+  li.phantom-wrapper::before {
+    content: none !important;
+  }
+}
+
+/* Minigame modals
+   Radix Dialog portals must render above the chat info sidebar overlay
+   (inline z-index: 10000) on small/medium screens. Radix defaults to
+   Tailwind's z-50 (= 50), so we override via data attributes here rather
+   than touching every modal file individually.                              */
+[data-radix-dialog-overlay],
+[data-radix-alert-dialog-overlay] {
+  z-index: 10001 !important;
+}
+
+[data-radix-dialog-content],
+[data-radix-alert-dialog-content] {
+  z-index: 10002 !important;
+}

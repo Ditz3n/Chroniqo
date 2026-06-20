@@ -1,0 +1,17 @@
+<svg viewBox="2 -5 110 100" width="36" height="36" aria-label="Chroniqo logo" xmlns="http://www.w3.org/2000/svg">
+  <path
+    d="M 50 15 C 20 15, 10 40, 25 75 L 45 75 C 35 50, 40 35, 50 35 C 60 35, 65 50, 55 75"
+    fill="none"
+    stroke="#F7F7F5"
+    stroke-width="12"
+    stroke-linecap="round"
+  />
+  <path
+    d="M 56 76 L 67 55 L 80 80 L 100 40"
+    fill="none"
+    stroke="#E65C69"
+    stroke-width="10"
+    stroke-linejoin="bevel"
+    stroke-linecap="round"
+  />
+</svg>

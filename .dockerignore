@@ -1,0 +1,15 @@
+// .dockerignore
+Dockerfile
+.dockerignore
+node_modules
+npm-debug.log
+README.md
+.next
+.git
+.env*.local
+coverage
+__tests__
+jest.config.mjs
+jest.setup.ts
+jest.polyfills.ts
+eslint.config.mjs

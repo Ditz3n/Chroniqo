@@ -1,0 +1,12 @@
+{
+  "crons": [
+    {
+      "path": "/api/cron/prune-chats",
+      "schedule": "0 2 * * *"
+    },
+    {
+      "path": "/api/cron/prune-unverified-users",
+      "schedule": "0 3 * * *"
+    }
+  ]
+}
